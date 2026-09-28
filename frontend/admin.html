@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrnaVision — Admin Panel</title>
+  <link rel="stylesheet" href="admin.css?v=3">
+</head>
+
+<body>
+
+  <!-- TOPBAR -->
+  <div class="admin-topbar">
+    <div class="top-title"><span>✺</span> OrnaVision Admin</div>
+    <a href="javascript:void(0)"
+      onclick="if(window.parent !== window && window.parent.showSearch) { window.parent.showSearch(); } else { window.location.href='/'; }"
+      class="back-link">
+      <span>←</span> Back to Search
+    </a>
+  </div>
+
+  <div class="admin-container">
+    <section class="hero" style="position: relative; border-radius: 20px; overflow: hidden; background: #faf8f5; padding: 0 40px; margin-bottom: 22px; min-height: 200px; display: flex; align-items: center; border: 1px solid #efe2c9;">
+      <div class="hero-text" style="position: relative; z-index: 2; flex: 1;">
+        <h1 style="margin: 0; font-size: 42px; line-height: 1.08; font-weight: 700; color: #241d15;">Gold Ornaments<span class="sub1" style="display: block; color: #a8967a; font-weight: 400; font-size: 38px; margin-top: 2px;">Admin Panel 🛡</span></h1>
+        <p style="color: #6b5c42; font-size: 14.5px; margin-top: 14px; max-width: 340px; line-height: 1.5;">Upload and index new inventory images into the AI Vector Database.</p>
+      </div>
+      <div class="hero-visual" style="position: absolute; right: 0; top: 0; bottom: 0; width: 65%; display: flex; justify-content: flex-end; z-index: 1;">
+        <img src="hero-visual.png" alt="Ornaments" style="height: 100%; width: 100%; object-fit: cover; object-position: right center; -webkit-mask-image: linear-gradient(to right, transparent, black 25%); mask-image: linear-gradient(to right, transparent, black 25%);">
+      </div>
+    </section>
+
+    <div class="cols">
+      <!-- LEFT: UPLOAD -->
+      <div class="card">
+        <h2>⇪ Upload New Inventory</h2>
+        <div class="upload-zone" id="dropZoneFiles">
+          <input id="imageInputFiles" type="file" accept="image/*" multiple hidden>
+          <input id="imageInputFolder" type="file" accept="image/*" webkitdirectory directory multiple hidden>
+          <div class="icn">📁</div>
+          <div class="txt">Drag &amp; Drop Images or Folders</div>
+          <div class="btn-row">
+            <button class="btn-outline" type="button"
+              onclick="document.getElementById('imageInputFolder').click()">Select Folder</button>
+            <button class="btn-outline" type="button"
+              onclick="document.getElementById('imageInputFiles').click()">Select Images</button>
+          </div>
+        </div>
+        <div class="selected-count" id="selectedInfo" style="display: none;">
+          <span id="fileCount">0</span> Images Selected
+        </div>
+      </div>
+
+      <!-- RIGHT: PROGRESS -->
+      <div class="card">
+        <h2>⚡ Processing Status</h2>
+        <div class="progress-box">
+          <div class="progress-bar-container" id="progressContainer">
+            <div class="progress-bar-fill" id="progressBar"></div>
+          </div>
+          <div class="progress-text" id="progressPercent">0%</div>
+        </div>
+
+        <div class="status-indicator" id="statusText">Ready to upload...</div>
+
+        <div class="live-activity" id="liveActivity" style="display:none;">
+          <div class="activity-item" id="act-reading">Reading Images</div>
+          <div class="activity-item" id="act-extracting">Extracting Features</div>
+          <div class="activity-item" id="act-similarity">Checking Similarity Search</div>
+          <div class="activity-item" id="act-uploading">Uploading to Qdrant</div>
+          <div class="activity-item" id="act-complete">Completed Successfully</div>
+        </div>
+
+        <button class="btn-primary" id="uploadBtn">🚀 Upload &amp; Index</button>
+      </div>
+    </div>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+      <div class="stat-box">
+        <div class="stat-icn">🖼</div>
+        <div>
+          <div class="stat-val" id="stat-images">0</div>
+          <div class="stat-lbl">Images Added</div>
+        </div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icn">✧</div>
+        <div>
+          <div class="stat-val" id="stat-embeddings">0</div>
+          <div class="stat-lbl">Embeddings Created</div>
+        </div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icn">❖</div>
+        <div>
+          <div class="stat-val" id="stat-qdrant">0</div>
+          <div class="stat-lbl">Stored in Qdrant</div>
+        </div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icn">⏱</div>
+        <div>
+          <div class="stat-val" id="stat-time">0s</div>
+          <div class="stat-lbl">Time Taken</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="admin.js"></script>
+</body>
+
+</html>

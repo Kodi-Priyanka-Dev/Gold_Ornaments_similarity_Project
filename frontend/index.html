@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrnaVision — Gold Ornaments Similarity Search</title>
+<link rel="stylesheet" href="style.css?v=26">
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div style="display: flex; align-items: center; gap: 11px;">
+        <img src="image.png" alt="OrnaVision Logo" class="brand-mark" style="background: transparent; object-fit: contain; border-radius: 0;">
+        <div>
+          <div class="brand-name">OrnaVision</div>
+          <div class="brand-sub">Gold Ornaments Search</div>
+        </div>
+      </div>
+      <button class="hamburger-menu" id="hamburgerBtn" style="display: none; background: transparent; border: none; font-size: 24px; color: var(--ink); cursor: pointer;">☰</button>
+    </div>
+
+    <div class="nav-section">
+      <button class="nav-item active" onclick="showSearch()"><span class="nav-icon">⌂</span> Home</button>
+      <button class="nav-item" onclick="showIframe('history.html')"><span class="nav-icon">↺</span> Search History</button>
+      <button class="nav-item" onclick="showIframe('collections.html')"><span class="nav-icon">♡</span> My Collections (<span id="sidebarCollectionCount">0</span>)</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <button type="button" id="compareBtn" class="nav-cta compare"><span class="nav-icon">⚖</span> Compare</button>
+    <button type="button" class="nav-cta admin" onclick="showIframe('/admin')"><span class="nav-icon">🛡</span> Admin Panel</button>
+
+    <div class="sidebar-footer">
+      Find the perfect<br>ornament, every time.
+      <div class="rule"></div>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div id="mainContentArea" style="flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow-y: auto;">
+  <main class="main" id="searchView">
+    <div class="topbar" style="display: none;">
+    </div>
+
+    <section class="hero" style="position: relative; border-radius: 20px; overflow: hidden; background: #faf8f5; padding: 0 40px; margin-bottom: 22px; min-height: 200px; display: flex; align-items: center; border: 1px solid #efe2c9;">
+      <div class="hero-text" style="position: relative; z-index: 2; flex: 1;">
+        <h1 style="margin: 0; font-size: 42px; line-height: 1.08; font-weight: 700; color: #241d15;">Gold Ornaments<span class="sub1" style="display: block; color: #a8967a; font-weight: 400; font-size: 38px; margin-top: 2px;">Similarity Search ✦</span></h1>
+        <p style="color: #6b5c42; font-size: 14.5px; margin-top: 14px; max-width: 340px; line-height: 1.5;">Upload an image or describe the ornament to find similar designs</p>
+      </div>
+
+      <div class="hero-visual" style="position: absolute; right: 0; top: 0; bottom: 0; width: 65%; display: flex; justify-content: flex-end; z-index: 1;">
+        <img src="hero-visual.png" alt="Ornaments" style="height: 100%; width: 100%; object-fit: cover; object-position: right center; -webkit-mask-image: linear-gradient(to right, transparent, black 25%); mask-image: linear-gradient(to right, transparent, black 25%);">
+      </div>
+    </section>
+
+    <div class="tabs">
+      <div class="tab active" id="tabImageSearch">▣ Image Search</div>
+      <div class="tab" id="tabTextSearch">◔ Text / Voice Search</div>
+      <div class="tab" onclick="showIframe('collections.html')">♡ My Collections (<span id="tabCollectionCount">0</span>)</div>
+      <div class="tab" onclick="showIframe('history.html')">↺ Search History</div>
+      <div class="tab" onclick="showIframe('how-it-works.html')">? How it Works</div>
+    </div>
+
+    <div class="unified-panel" id="dropZone">
+      <div class="unified-settings">
+        <select id="voiceLangSelect" class="lang-select compact-lang">
+            <option value="en-IN" selected>English</option>
+            <option value="te-IN">Telugu (తెలుగు)</option>
+            <option value="hi-IN">Hindi (हिंदी)</option>
+            <option value="ta-IN">Tamil (தமிழ்)</option>
+            <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+            <option value="ml-IN">Malayalam (മലയാളം)</option>
+        </select>
+      </div>
+      
+      <div class="unified-search-bar" id="unifiedSearchBar">
+        <!-- Left: Image Upload & Preview -->
+        <div class="unified-left">
+          <label for="imageInput" class="unified-icon-btn upload-trigger" title="Upload Image">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </label>
+          <input id="imageInput" type="file" accept="image/*" hidden>
+          
+          <div class="uploaded-preview-chip" id="uploadedPreviewChip">
+            <div id="uploadedPreview" class="preview-img-container"></div>
+            <button id="removeImageBtn" type="button" class="change-img-btn" title="Remove Image" style="border:none; background:transparent;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Center: Text Input -->
+        <div class="unified-center">
+          <input type="text" id="textSearchInput" class="unified-text-input" placeholder="Search or describe an ornament...">
+        </div>
+
+        <!-- Right: Actions -->
+        <div class="unified-right">
+          <button id="micBtn" class="unified-icon-btn" title="Search by Voice">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
+          </button>
+          
+          <button id="searchBtn" type="button" class="unified-search-btn" title="Search">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+          
+          <button id="textSearchBtn" style="display: none;"></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-container">
+        <p class="status-text" id="statusText">Upload an image to begin.</p>
+    </div>
+
+    <!-- Info Bar (Hidden initially) -->
+    <div class="info-bar glass-card" id="infoBar" style="display: none;">
+        <div class="info-item">
+            <div class="info-icon">🏷️</div>
+            <div class="info-text">
+                <span class="info-label">Category</span>
+                <span class="info-value" id="infoCategory">-</span>
+            </div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon">🏆</div>
+            <div class="info-text">
+                <span class="info-label">Best Match</span>
+                <span class="info-value" id="infoBestMatch">-</span>
+            </div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon">🖼️</div>
+            <div class="info-text">
+                <span class="info-label">Found</span>
+                <span class="info-value" id="infoResults">-</span>
+            </div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon">⏱️</div>
+            <div class="info-text">
+                <span class="info-label">Search Time</span>
+                <span class="info-value" id="infoTime">-</span>
+                <span style="font-size: 0.7rem; color: #a89a86; margin-top: 2px;" id="infoTimestamp"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results: Exact Match -->
+    <div id="exactSection" class="results-section" style="display: none;">
+        <div class="results-head">
+            <h3>✨ Exact Match ✨</h3>
+        </div>
+        <div class="results-grid" id="exactResultsList"></div>
+    </div>
+
+    <!-- Results: Similar -->
+    <div id="similarSection" class="results-section" style="display: none;">
+        <div class="results-head">
+            <h3>✨ Similar Ornaments ✨</h3>
+        </div>
+        <div class="results-grid" id="similarResultsList"></div>
+
+        <div class="load-more-wrapper" id="loadMoreWrapper" style="display: none;">
+            <button id="loadMoreBtn" class="load-more-btn">Load More</button>
+        </div>
+
+        <!-- Other Models Trigger -->
+        <div id="otherModelsTrigger" style="display: none; text-align: center; margin-top: 40px;">
+            <p style="color: var(--muted); font-size: 0.95rem; margin-bottom: 15px;">No more close matches</p>
+            <button id="showOtherModelsBtn" class="load-more-btn">🔍
+                Other Models</button>
+        </div>
+    </div>
+
+    <!-- Results: Remaining Models (<70%) -->
+    <div id="otherModelsSection" class="results-section" style="display: none; margin-top: 40px;">
+        <div class="results-head" style="color: #a0a6b5;">
+            <h3>✨ REMAINING MODELS ✨</h3>
+        </div>
+        <div class="results-grid" id="otherResultsList"></div>
+
+        <div class="load-more-wrapper" id="loadMoreOtherWrapper" style="display: none;">
+            <button id="loadMoreOtherBtn" class="load-more-btn">Load More</button>
+        </div>
+    </div>
+
+  </main>
+  <iframe id="contentFrame" src="" style="display: none; width: 100%; height: 100%; border: none; flex: 1;"></iframe>
+  </div>
+</div>
+
+<!-- Scroll to Top Button -->
+<button id="scrollTopBtn" class="scroll-top-btn" title="Go to top">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="18 15 12 9 6 15"></polyline>
+  </svg>
+</button>
+
+<!-- Result Template -->
+<template id="resultTemplate">
+    <div class="result-card">
+        <div class="image-wrapper">
+            <img class="result-image" alt="Ornament Result" loading="lazy" decoding="async">
+            <div class="result-count" style="display: none;"></div>
+            <span class="gold-badge result-score"></span>
+            <span class="heart">♡</span>
+        </div>
+        <div class="card-body result-meta" style="display: none;">
+            <span class="meta-category"></span>
+            <div class="meta-features"></div>
+        </div>
+        <button class="compare-trigger-btn">Compare</button>
+    </div>
+</template>
+
+<!-- Compare Modal -->
+<div id="compareModal" class="compare-modal" style="display: none;">
+    <div class="compare-modal-overlay" onclick="closeCompareModal()"></div>
+    <div class="compare-modal-content">
+        <button class="compare-modal-close" onclick="closeCompareModal()">&times;</button>
+        <div id="compareModalLoading" class="compare-modal-loading">
+            <h3>Analyzing...</h3>
+            <p>Analyzing ornaments</p>
+        </div>
+        <iframe id="compareFrame" class="compare-modal-frame" src="" style="display: none;"></iframe>
+    </div>
+</div>
+
+<div id="compareSelectionBanner" class="compare-selection-banner" style="display: none;">
+    <div class="banner-content">
+        <div class="banner-text">
+            <span class="banner-title">⚡ Select the second image to compare</span>
+            <span class="banner-sub">Click an image from the search results.</span>
+        </div>
+        <button id="cancelCompareBtn" class="cancel-compare-btn">Cancel Selection</button>
+    </div>
+</div>
+
+<!-- Hover Preview Container -->
+<div id="hoverPreviewContainer">
+  <img id="hoverPreviewImage" src="" alt="">
+</div>
+
+<script src="script.js?v=33"></script>
+<script>
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.nav-item').forEach(t=>{
+    t.addEventListener('click',()=>{
+      document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+    });
+  });
+  // Removed inline heart click listener; moved to script.js
+</script>
+</body>
+</html>

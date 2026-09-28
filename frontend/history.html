@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Search History</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { background: #faf8f5; margin: 0; padding: 40px; font-family: -apple-system, sans-serif; }
+  h1 { color: #241d15; font-size: 32px; margin-top: 0; margin-bottom: 30px; }
+  
+  .stats-grid { display: flex; gap: 20px; margin-bottom: 40px; }
+  .stat-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; flex: 1; text-align: center; cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .stat-card:hover { border-color: var(--gold-deep); }
+  .stat-card.active { border-color: var(--gold-deep); box-shadow: 0 4px 12px rgba(138, 100, 20, 0.15); }
+  .stat-val { font-size: 36px; font-weight: 700; color: var(--gold-deep); }
+  .stat-label { font-size: 14px; color: var(--muted); text-transform: uppercase; margin-top: 5px; font-weight: 600; }
+  
+  .history-list { background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .history-item { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .history-item:last-child { border-bottom: none; }
+  
+  .type-badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+  .type-image { background: #f0e6ff; color: #6a32c9; }
+  .type-text { background: #e6f4ff; color: #0066cc; }
+  .type-voice { background: #e6ffec; color: #009933; }
+  
+  .h-query { font-size: 15px; font-weight: 600; color: var(--ink); margin-left: 15px; flex: 1; }
+  .h-time { font-size: 13px; color: var(--muted); }
+  
+  .empty-state { text-align: center; color: #a89a86; padding: 50px; font-size: 18px; }
+</style>
+</head>
+  <div style="margin-bottom: 20px;">
+      <a href="javascript:void(0)" onclick="if(window.parent && window.parent.showSearch) window.parent.showSearch();" style="text-decoration: none; color: #8a6414; font-weight: 600; font-size: 14px; background: #fff; padding: 8px 16px; border-radius: 20px; border: 1px solid #efe2c9; display: inline-block;">← Back</a>
+  </div>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+      <h1 style="margin: 0;">Search History ↺</h1>
+      <div>
+          <button id="selectModeBtn" style="padding: 6px 14px; border-radius: 20px; border: 1px solid var(--gold-deep); background: transparent; color: var(--gold-deep); font-weight: 600; cursor: pointer; margin-right: 10px;">Select</button>
+          <button id="clearAllBtn" style="padding: 6px 14px; border-radius: 20px; border: 1px solid #c25b6e; background: transparent; color: #c25b6e; font-weight: 600; cursor: pointer;">Clear All</button>
+      </div>
+  </div>
+  
+  <div id="actionBar" style="display: none; justify-content: flex-end; gap: 10px; margin-bottom: 20px;">
+      <button id="selectAllBtn" style="padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: #fff; cursor: pointer;">Select All</button>
+      <button id="deleteSelectedBtn" style="padding: 6px 14px; border-radius: 20px; border: none; background: #c25b6e; color: #fff; cursor: pointer;">Delete Selected</button>
+  </div>
+  
+  <div class="stats-grid">
+      <div class="stat-card" id="cardImage">
+          <div class="stat-val" id="statImage">0</div>
+          <div class="stat-label">Image Searches</div>
+      </div>
+      <div class="stat-card" id="cardText">
+          <div class="stat-val" id="statText">0</div>
+          <div class="stat-label">Text Prompts</div>
+      </div>
+      <div class="stat-card" id="cardVoice">
+          <div class="stat-val" id="statVoice">0</div>
+          <div class="stat-label">Voice Searches</div>
+      </div>
+  </div>
+
+  <div class="history-list" id="historyList"></div>
+  <div id="emptyState" class="empty-state" style="display: none;">No search history found.</div>
+
+  <div id="contextMenu" style="display: none; position: absolute; background: #fff; border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100;">
+      <div id="contextDeleteBtn" style="padding: 10px 20px; color: #c25b6e; cursor: pointer; font-weight: 600;">🗑 Delete</div>
+  </div>
+
+  <div id="confirmModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center;">
+      <div style="background: #fff; padding: 30px; border-radius: 12px; width: 400px; max-width: 90%; text-align: center;">
+          <h2 id="modalTitle" style="margin-top: 0; color: #241d15;">Confirm</h2>
+          <p id="modalText" style="color: var(--muted); margin-bottom: 30px; line-height: 1.5;"></p>
+          <div style="display: flex; justify-content: center; gap: 15px;">
+              <button id="modalCancelBtn" style="padding: 8px 20px; border-radius: 20px; border: 1px solid var(--border); background: #fff; cursor: pointer;">Cancel</button>
+              <button id="modalConfirmBtn" style="padding: 8px 20px; border-radius: 20px; border: none; background: #c25b6e; color: #fff; cursor: pointer;">Delete</button>
+          </div>
+      </div>
+  </div>
+
+  <script>
+    let searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+    let isSelectMode = false;
+    let selectedIndices = new Set();
+    let contextMenuTargetIndex = -1;
+    let confirmAction = null;
+    let currentFilter = 'all';
+
+    const list = document.getElementById('historyList');
+    const emptyState = document.getElementById('emptyState');
+    const statImage = document.getElementById('statImage');
+    const statText = document.getElementById('statText');
+    const statVoice = document.getElementById('statVoice');
+
+    const cardImage = document.getElementById('cardImage');
+    const cardText = document.getElementById('cardText');
+    const cardVoice = document.getElementById('cardVoice');
+
+    const selectModeBtn = document.getElementById('selectModeBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const actionBar = document.getElementById('actionBar');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+
+    const contextMenu = document.getElementById('contextMenu');
+    const contextDeleteBtn = document.getElementById('contextDeleteBtn');
+
+    const confirmModal = document.getElementById('confirmModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalText = document.getElementById('modalText');
+    const modalCancelBtn = document.getElementById('modalCancelBtn');
+    const modalConfirmBtn = document.getElementById('modalConfirmBtn');
+
+    function updateCardVisuals() {
+        cardImage.classList.toggle('active', currentFilter === 'image');
+        cardText.classList.toggle('active', currentFilter === 'text');
+        cardVoice.classList.toggle('active', currentFilter === 'voice');
+    }
+
+    cardImage.addEventListener('click', () => { currentFilter = currentFilter === 'image' ? 'all' : 'image'; updateCardVisuals(); renderHistory(); });
+    cardText.addEventListener('click', () => { currentFilter = currentFilter === 'text' ? 'all' : 'text'; updateCardVisuals(); renderHistory(); });
+    cardVoice.addEventListener('click', () => { currentFilter = currentFilter === 'voice' ? 'all' : 'voice'; updateCardVisuals(); renderHistory(); });
+
+    function renderHistory() {
+        let countImage = 0, countText = 0, countVoice = 0;
+        searchHistory.forEach(item => {
+            if (item.type === 'image') countImage++;
+            else if (item.type === 'text') countText++;
+            else if (item.type === 'voice') countVoice++;
+        });
+        statImage.textContent = countImage;
+        statText.textContent = countText;
+        statVoice.textContent = countVoice;
+
+        list.innerHTML = '';
+        if (searchHistory.length === 0) {
+            emptyState.style.display = 'block';
+            list.style.display = 'none';
+            selectModeBtn.style.display = 'none';
+            clearAllBtn.style.display = 'none';
+            actionBar.style.display = 'none';
+        } else {
+            emptyState.style.display = 'none';
+            list.style.display = 'block';
+            selectModeBtn.style.display = 'inline-block';
+            clearAllBtn.style.display = isSelectMode ? 'none' : 'inline-block';
+
+            let itemsRendered = 0;
+            searchHistory.forEach((item, index) => {
+                if (currentFilter !== 'all' && item.type !== currentFilter) return;
+                itemsRendered++;
+
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.style.cursor = isSelectMode ? 'default' : 'pointer';
+                
+                const date = new Date(item.timestamp).toLocaleString();
+                
+                let imageHtml = '';
+                if (item.type === 'image' && item.imgData) {
+                    imageHtml = `<img src="${item.imgData}" style="width: 50px; height: 50px; object-fit: contain; border-radius: 6px; margin-right: 15px; border: 1px solid #efe2c9;">`;
+                }
+
+                let checkboxHtml = '';
+                if (isSelectMode) {
+                    const isChecked = selectedIndices.has(index) ? 'checked' : '';
+                    checkboxHtml = `<input type="checkbox" data-index="${index}" ${isChecked} style="margin-right: 15px; transform: scale(1.3); cursor: pointer;">`;
+                }
+
+                div.innerHTML = `
+                    <div style="display: flex; align-items: center; flex: 1;">
+                        ${checkboxHtml}
+                        ${imageHtml}
+                        <span class="type-badge type-${item.type}">${item.type}</span>
+                        <span class="h-query">${item.query}</span>
+                    </div>
+                    <div class="h-time">${date}</div>
+                `;
+
+                div.addEventListener('click', (e) => {
+                    if (isSelectMode) {
+                        if (e.target.type !== 'checkbox') {
+                            const cb = div.querySelector('input[type="checkbox"]');
+                            cb.checked = !cb.checked;
+                            if (cb.checked) selectedIndices.add(index);
+                            else selectedIndices.delete(index);
+                        } else {
+                            if (e.target.checked) selectedIndices.add(index);
+                            else selectedIndices.delete(index);
+                        }
+                    } else {
+                        if (item.type === 'image' && item.imgData && window.parent && window.parent.searchFromImageUrl) {
+                            window.parent.searchFromImageUrl(item.imgData);
+                        }
+                    }
+                });
+
+                div.addEventListener('contextmenu', (e) => {
+                    if (isSelectMode) return;
+                    e.preventDefault();
+                    contextMenuTargetIndex = index;
+                    contextMenu.style.display = 'block';
+                    contextMenu.style.left = `${e.pageX}px`;
+                    contextMenu.style.top = `${e.pageY}px`;
+                });
+
+                list.appendChild(div);
+            });
+
+            if (itemsRendered === 0) {
+                emptyState.style.display = 'block';
+                list.style.display = 'none';
+                if (!isSelectMode) {
+                    selectModeBtn.style.display = 'none';
+                    clearAllBtn.style.display = 'none';
+                }
+            }
+        }
+    }
+
+    function saveHistory() {
+        localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+        renderHistory();
+    }
+
+    function showModal(title, text, onConfirm) {
+        modalTitle.textContent = title;
+        modalText.textContent = text;
+        confirmAction = onConfirm;
+        confirmModal.style.display = 'flex';
+    }
+
+    modalCancelBtn.addEventListener('click', () => confirmModal.style.display = 'none');
+    modalConfirmBtn.addEventListener('click', () => {
+        if (confirmAction) confirmAction();
+        confirmModal.style.display = 'none';
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!contextMenu.contains(e.target)) {
+            contextMenu.style.display = 'none';
+        }
+    });
+
+    contextDeleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        contextMenu.style.display = 'none';
+        showModal('Delete this search?', 'Are you sure you want to delete this image from your search history?', () => {
+            if (contextMenuTargetIndex > -1) {
+                searchHistory.splice(contextMenuTargetIndex, 1);
+                saveHistory();
+            }
+        });
+    });
+
+    selectModeBtn.addEventListener('click', () => {
+        isSelectMode = !isSelectMode;
+        if (isSelectMode) {
+            selectModeBtn.textContent = 'Done';
+            actionBar.style.display = 'flex';
+            clearAllBtn.style.display = 'none';
+        } else {
+            selectModeBtn.textContent = 'Select';
+            actionBar.style.display = 'none';
+            clearAllBtn.style.display = 'inline-block';
+            selectedIndices.clear();
+        }
+        renderHistory();
+    });
+
+    selectAllBtn.addEventListener('click', () => {
+        if (selectedIndices.size === searchHistory.length) {
+            selectedIndices.clear();
+        } else {
+            searchHistory.forEach((_, i) => selectedIndices.add(i));
+        }
+        renderHistory();
+    });
+
+    deleteSelectedBtn.addEventListener('click', () => {
+        if (selectedIndices.size === 0) return;
+        showModal('Delete Selected?', `Are you sure you want to delete ${selectedIndices.size} items?`, () => {
+            searchHistory = searchHistory.filter((_, i) => !selectedIndices.has(i));
+            selectedIndices.clear();
+            isSelectMode = false;
+            selectModeBtn.textContent = 'Select';
+            actionBar.style.display = 'none';
+            clearAllBtn.style.display = 'inline-block';
+            saveHistory();
+        });
+    });
+
+    clearAllBtn.addEventListener('click', () => {
+        showModal('Clear Search History?', 'Are you sure you want to delete all search history? This action cannot be undone.', () => {
+            searchHistory = [];
+            saveHistory();
+        });
+    });
+
+    renderHistory();
+  </script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Collections</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { background: #faf8f5; margin: 0; padding: 40px; }
+  h1 { color: #241d15; font-size: 32px; margin-top: 0; }
+  .empty-state { text-align: center; color: #a89a86; padding: 50px; font-size: 18px; }
+</style>
+</head>
+  <div style="margin-bottom: 20px;">
+      <a href="javascript:void(0)" onclick="if(window.parent && window.parent.showSearch) window.parent.showSearch();" style="text-decoration: none; color: #8a6414; font-weight: 600; font-size: 14px; background: #fff; padding: 8px 16px; border-radius: 20px; border: 1px solid #efe2c9; display: inline-block;">← Back</a>
+  </div>
+  <h1 style="margin-top: 0; margin-bottom: 30px;">My Collections 💖</h1>
+  <div class="results-grid" id="collectionsGrid"></div>
+  <div id="emptyState" class="empty-state" style="display: none;">You haven't added any items to your collections yet.</div>
+
+  <template id="collectionCardTemplate">
+      <div class="result-card">
+          <div class="image-wrapper">
+              <img class="result-image" alt="Saved Ornament" loading="lazy" decoding="async" style="cursor: pointer;" onclick="if(window.parent && window.parent.searchFromImageUrl) window.parent.searchFromImageUrl(this.src);">
+              <span class="heart">♥</span>
+          </div>
+      </div>
+  </template>
+
+  <script>
+    const myCollections = JSON.parse(localStorage.getItem('myCollections')) || [];
+    const grid = document.getElementById('collectionsGrid');
+    const emptyState = document.getElementById('emptyState');
+    const template = document.getElementById('collectionCardTemplate');
+
+    function render() {
+        grid.innerHTML = '';
+        if (myCollections.length === 0) {
+            emptyState.style.display = 'block';
+            return;
+        }
+        emptyState.style.display = 'none';
+
+        myCollections.forEach(imgUrl => {
+            const card = template.content.firstElementChild.cloneNode(true);
+            card.querySelector('.result-image').src = imgUrl;
+            
+            const heart = card.querySelector('.heart');
+            heart.addEventListener('click', () => {
+                const idx = myCollections.indexOf(imgUrl);
+                if (idx > -1) {
+                    myCollections.splice(idx, 1);
+                    localStorage.setItem('myCollections', JSON.stringify(myCollections));
+                    // Update main window counts
+                    if(window.parent && window.parent.updateCollectionCount) {
+                        window.parent.updateCollectionCount();
+                    }
+                    render(); // Re-render to remove it
+                }
+            });
+
+            grid.appendChild(card);
+        });
+    }
+
+    render();
+  </script>
+</body>
+</html>

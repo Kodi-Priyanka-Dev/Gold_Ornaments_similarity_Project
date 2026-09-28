@@ -1,0 +1,34 @@
+.venv/
+venv/
+output/
+outputs/
+md_files/
+.git/
+.gitignore
+.gitattributes
+**/__pycache__/
+**/*.py[cod]
+.pytest_cache/
+.vscode/
+.idea/
+
+# Precomputed .npy/.pkl feature dumps (~66 MB). Only the one-off migration
+# scripts read these; the API queries Qdrant instead.
+Embeddings/
+
+# Training/eval code and notebooks are not part of the served app.
+main.py/
+*.ipynb
+
+# Docs
+*.md
+
+# Runtime scratch
+backend/uploads/
+
+# NOTE: models/, backend/dataset/ and backend/new_inventory/ are intentionally
+# NOT ignored - best_model.pth is loaded at startup and the dataset images are
+# served by /api/images/.
+
+
+

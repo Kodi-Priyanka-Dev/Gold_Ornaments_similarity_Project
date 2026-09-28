@@ -1,0 +1,48 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Flask / Web
+instance/
+.webassets-cache
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Large Data, Models, and Outputs
+*.pt
+
+
+backend/uploads/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+dataset/
+qdrant_db/
+models/
+
+
+backend/new_inventory/
+server.log
+
+# Scratch scripts
+main.py/

@@ -1,0 +1,68 @@
+networks:
+  gold-search-net:
+    driver: bridge
+
+services:
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: gold-search-azurite
+    ports:
+      - "10000:10000" # Blob service endpoint
+    networks:
+      - gold-search-net
+    volumes:
+      - azurite-data:/data
+    command: "azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --location /data"
+    restart: always
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gold-search-api
+    image: "gold-search-api"
+    ports:
+      - 5000:5000
+    networks:
+      - gold-search-net
+    depends_on:
+      - azurite
+
+    # Secrets come from .env now instead of being written into the compose file.
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: "5000"
+      # One gunicorn worker with threads: each worker holds its own ~1.5 GB copy
+      # of the models, so a second worker means OOM on a small host.
+      WEB_CONCURRENCY: "1"
+      WEB_THREADS: "8"
+      # Well-known Azurite emulator credentials (not a secret, published by
+      # Microsoft) - used only as a fallback when .env doesn't set these, so
+      # a real container name / connection string (or AZURE_STORAGE_ACCOUNT_URL
+      # for managed identity) placed in .env actually takes effect instead of
+      # being overridden here.
+      AZURE_STORAGE_CONNECTION_STRING: "${AZURE_STORAGE_CONNECTION_STRING:-DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;}"
+      AZURE_STORAGE_CONTAINER: "${AZURE_STORAGE_CONTAINER:-jewellery-data}"
+
+    healthcheck:
+      # Was: curl -f https://localhost:5000 exit 1 - malformed (missing "||")
+      # and https against an http listener, so it could never pass.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+
+    # Models plus the request working set need real headroom. Without a limit an
+    # oversized upload could take the whole host down.
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+
+    restart: always
+
+volumes:
+  azurite-data:
